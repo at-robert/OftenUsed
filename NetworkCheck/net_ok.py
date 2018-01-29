@@ -14,5 +14,8 @@ def is_connected():
 def get_lohost_ip():
     return socket.gethostbyname(socket.gethostname())
 
-print (is_connected())
-print("local host ip = {}".format(get_lohost_ip()))
+'''
+The test field : below source code should be kept closed in the regular time
+'''
+# print (is_connected())
+# print("local host ip = {}".format(get_lohost_ip()))
