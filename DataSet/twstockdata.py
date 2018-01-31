@@ -5,5 +5,5 @@ def get_stock_list():
     return stock_list
 
 def get_stock_thre():
-    thre_dic = {'第一金':18,'聯華':36,'中華電信':107,'台灣大哥大':109,'可寧衛':170,'瑞軒':16}
+    thre_dic = {'第一金':18,'聯華':36,'中華電信':107,'台灣大哥大':109,'可寧衛':170,'瑞軒':16,'富邦金':50}
     return thre_dic
