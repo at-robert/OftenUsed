@@ -1,0 +1,45 @@
+Tutorial for creating haar cascade:
+https://www.youtube.com/watch?v=jG3bu0tjFbk
+
+TextBase tutorial:
+https://pythonprogramming.net/haar-cascade-object-detection-python-opencv-tutorial/
+
+The place to get free image files:
+http://image-net.org/
+
+How to create your own Haar Cascade for object detection:
+
+STEP1:
+$ mkdir opencv_ws
+$ cd opencv_ws
+
+sudo apt-get update
+sudo apt-get upgrade
+
+git clone https://github.com/Itseez/opencv.git
+
+We've cloned the latest version of OpenCV here. Now let's get some essentials:
+
+$ sudo apt-get install build-essential
+$ sudo apt-get install cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
+$ sudo apt-get install python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev
+
+Finally, let's grab the OpenCV development library:
+$ sudo apt-get install libopencv-dev
+
+STEP2:
+To copy bg.txt, 'neg' folder with negative image files and watch5050.jpg ('positive image')
+$ mkdir info
+$ mkdir data
+
+STEP3:
+# watch5050.jpg is your target positive file and it could be any image file you want
+$ opencv_createsamples -img watch5050.jpg -bg bg.txt -info info/info.lst -pngoutput info -maxxangle 0.5 -maxyangle 0.5 -maxzangle 0.5 -num 1950
+
+NOTE:
+The sample files of bg.txt downloaded from this site has a problem to cause the error "Invalid background description file". You can use the neg folder with images and then run the python code to generate 'bg.txt' by yourself
+
+STEP4:
+$ opencv_createsamples -info info/info.lst -num 1950 -w 50 -h 50 -vec positives.vec
+
+$ opencv_traincascade -data data -vec positives.vec -bg bg.txt -numPos 1800 -numNeg 900 -numStages 10 -w 50 -h 50
