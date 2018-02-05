@@ -1,11 +1,11 @@
 import numpy as np
 import cv2
 
-# face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-# eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+# face_cascade = cv2.CascadeClassifier('./haarc_xml/haarcascade_frontalface_default.xml')
+# eye_cascade = cv2.CascadeClassifier('./haarc_xml/haarcascade_eye.xml')
 
 #this is the cascade we just made. Call what you want
-watch_cascade = cv2.CascadeClassifier('./data/cascade_watch.xml')
+watch_cascade = cv2.CascadeClassifier('./haarc_xml/cascade_watch5050.xml')
 
 cap = cv2.VideoCapture(0)
 
@@ -16,14 +16,14 @@ while 1:
     
     # add this
     # image, reject levels level weights.
-    # watches = watch_cascade.detectMultiScale(gray, 50, 50)
-    watches = watch_cascade.detectMultiScale(gray, scaleFactor=1.3,minNeighbors=10, minSize=(20, 20))
-    
+    # watches = watch_cascade.detectMultiScale(gray, 2, 5)
+    watches = watch_cascade.detectMultiScale(gray, 1.3,50)
+
     # add this
     for (x,y,w,h) in watches:
         # cv2.rectangle(img,(x,y),(x+w,y+h),(255,255,0),2)
         font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(img,'Watch',(x-w,y-h), font, 0.5, (11,255,255), 2, cv2.LINE_AA)
+        cv2.putText(img,'Watch',(x,y), font, 0.5, (11,255,255), 2, cv2.LINE_AA)
 
     # for (x,y,w,h) in faces:
     #     cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
