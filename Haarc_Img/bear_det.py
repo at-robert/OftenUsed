@@ -16,8 +16,8 @@ while 1:
     
     # add this
     # image, reject levels level weights.
-    bears = bear_cascade.detectMultiScale(gray, 1.3, 5)
-    # watches = watch_cascade.detectMultiScale(gray, scaleFactor=1.3,minNeighbors=5)
+    # bears = bear_cascade.detectMultiScale(gray, 1.3, 5)
+    bears = bear_cascade.detectMultiScale(gray, scaleFactor=1.3,minNeighbors=10,minSize=(20,20))
     
     # add this
     for (x,y,w,h) in bears:

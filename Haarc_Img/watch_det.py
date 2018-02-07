@@ -17,7 +17,7 @@ while 1:
     # add this
     # image, reject levels level weights.
     # watches = watch_cascade.detectMultiScale(gray, 2, 5)
-    watches = watch_cascade.detectMultiScale(gray, 1.3,50)
+    watches = watch_cascade.detectMultiScale(gray, 2,50)
 
     # add this
     for (x,y,w,h) in watches:
