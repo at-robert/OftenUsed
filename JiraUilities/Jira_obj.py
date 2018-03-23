@@ -79,6 +79,7 @@ def connect_to_jira(auth, passw):
    try:
        jira = JIRA(options=jira_options, basic_auth=(auth, passw))
    except Exception as e:
+       print(e)
        jira = None
 
    return jira
