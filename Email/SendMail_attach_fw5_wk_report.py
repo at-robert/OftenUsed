@@ -34,7 +34,9 @@ def search_auth_file(folder, auth_data, pass_data):
 def sendEmail_attach(subject, fullpath, fullpath_next):                                      
     try:                                        # 例外處理
         sender = 'robert.lo@amtran.com.tw'
-        recipients = ['robert.lo@amtran.com.tw','wayne.mai@amtran.com.tw'] 
+        # recipients = ['robert.lo@amtran.com.tw','wayne.mai@amtran.com.tw'] 
+        recipients = ['robert.lo@amtran.com.tw','wayne.mai@amtran.com.tw','tony.tsou@amtran.com.tw','louis.lin@amtran.com.tw','miles.liu@amtran.com.tw','paul.fan@amtran.com.tw','johnson.yang@amtran.com.tw'] 
+
         # recipients = ['atttrobert@gmail.com'] 
         emaillist = [elem.strip().split(',') for elem in recipients]
         msg = MIMEMultipart()
