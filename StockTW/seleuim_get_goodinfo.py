@@ -3,13 +3,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium import webdriver
+from datetime import datetime
 
 import time
 import re
 import sys, os
 
 def selenium_get_good_info_div():
-    url = 'https://goodinfo.tw/StockInfo/StockDividendScheduleList.asp?MARKET_CAT=%E4%B8%8A%E5%B8%82&INDUSTRY_CAT=%E5%85%A8%E9%83%A8&YEAR=2020'
+    current_year = datetime.today().year
+    print("Current Year = {} ".format(current_year))
+
+    url = 'https://goodinfo.tw/StockInfo/StockDividendScheduleList.asp?MARKET_CAT=%E4%B8%8A%E5%B8%82&INDUSTRY_CAT=%E5%85%A8%E9%83%A8&YEAR={}'.format(current_year)
     pwd = os.path.expanduser('~') + '/'
 
     # 不打開瀏覽器執行
