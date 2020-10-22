@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import seleuim_get_goodinfo as goodinfo_se
 
 
 def print_stock_divined_date(df_):
@@ -10,6 +11,8 @@ def print_stock_divined_date(df_):
     key1 = '股票名稱'
     key2 = '股東會日期'
     key3 = '除息日程'
+
+    print(" {}  -- {} --- {} ".format(key1,key2,key3))
 
     for i in range(0, len(stock_id_list)):
         stock_df = df_[df_[key0] == stock_id_list[i]]
@@ -24,17 +27,30 @@ def print_stock_divined_date(df_):
 if __name__ == "__main__":
 
     pwd = os.path.expanduser('~') + '/'
-    df = pd.read_html(pwd + 'Downloads/SaleMonDetail.html', encoding='utf-8')
-    arr = df[0]
+    filepath = pwd + 'Downloads/SaleMonDetail.html'
 
-    # print(arr)
+    if os.path.isfile(filepath):
+        print("To delete {} \n".format(filepath))
+        os.remove(filepath)
+    else:
+        print("The file {} doesn't exist\n".format(filepath))
 
-    # To get columns value name
-    data = np.array(arr[806:807])
-    d = data.tolist()
-    arr.columns = d[0]
-    df = arr[['代碼', '股票名稱', '股東會日期','除息日程']]
-    df = df.iloc[:,:4]
+    goodinfo_se.selenium_get_good_info_div()
 
-    # print(df)
-    print_stock_divined_date(df)
+    if os.path.isfile(filepath):
+        df = pd.read_html(filepath, encoding='utf-8')
+        arr = df[0]
+
+        # print("The length of arr = {} ".format(len(arr)))
+        # print(arr)
+
+        # To get columns value name
+        data = np.array(arr[len(arr)-3:len(arr)-2])
+        d = data.tolist()
+        arr.columns = d[0]
+        df = arr[['代碼', '股票名稱', '股東會日期','除息日程']]
+        df = df.iloc[:,:4]
+
+        print_stock_divined_date(df)
+    else:
+        print("The file {} doesn't exist\n".format(filepath))
