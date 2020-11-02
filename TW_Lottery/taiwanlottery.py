@@ -1,6 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 
+import sys
+sys.path.append("../Tools/")
+import text_color as tc
+
 
 url = 'https://www.taiwanlottery.com.tw/'
 r = requests.get(url)
@@ -13,13 +17,13 @@ print('威力彩期數：', title)
 # 開獎號碼
 nums = datas.find_all('div', class_='ball_tx ball_green')
 # 開出順序
-print('開出順序：', end=' ')
+print(tc.bcolors.OKBLUE + '開出順序：', end=' ' + tc.bcolors.ENDC)
 for i in range(0,6):
     print(nums[i].text, end=' ')
 # 大小順序
 print('\n大小順序：', end=' ')
 for i in range(6,12):
-    print(nums[i].text, end=' ')
+    print( tc.bcolors.OKRED + nums[i].text, end=' ' + tc.bcolors.ENDC)
 # 第二區
 num = datas.find('div', class_='ball_red').text
 print('\n第二區：', num)
