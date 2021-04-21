@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 pwd_path = os.path.expanduser('~') + '/'
 sys.path.append(pwd_path + "Documents/Github/OftenUsed/Tools/")
 import send_line as sl
+import Emailfuncs as efs
 
 # ------------------  To calculate time difference ------------------------------------
 def extract_time_data(str_):
@@ -42,7 +43,7 @@ def get_cert_and_work_sheet():
     scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name(pwd + 'Documents/Gdrive_credential/client_secret.json', scope)
     client = gspread.authorize(creds)
-    google_sheet = "FW5 Day Off"
+    google_sheet = "FW3 Day Off"
 
     sheet = client.open(google_sheet)
     worksheet_year = sheet.worksheet(str(datetime.today().year))
@@ -99,4 +100,7 @@ if __name__ == "__main__":
 
     if (len(out) > 0):
         sl.lineNotify(out)
+        # To send out Email as well
+        str1 = ''.join(out)
+        efs.sendEmail_text('FW3 Day Off Info',str1)
         print(out)
