@@ -30,7 +30,7 @@ def search_auth_file(folder, auth_data, pass_data):
 def sendEmail_text(subject, context):
     try:                                        # 例外處理
         sender = 'robert.lo@amtran.com.tw'
-        recipients = ['atttrobert@gmail.com','robert.lo@amtran.com.tw']
+        recipients = ['atttrobert@gmail.com','robert.lo@amtran.com.tw','darcy.chiu@amtran.com.tw']
         emaillist = [elem.strip().split(',') for elem in recipients]
         msg = MIMEMultipart()
         msg['Subject'] = subject
