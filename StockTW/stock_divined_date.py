@@ -56,6 +56,7 @@ def print_stock_divined_date(df_):
     key1 = '股票名稱'
     key2 = '股東會日期'
     key3 = '除息日程'
+    key4 = '發放日'
 
     str_list = []
 
@@ -67,7 +68,7 @@ def print_stock_divined_date(df_):
         
         try:
             if stock_df[[key0]].values[0] == stock_id_list[i]:
-                str_list.append(" {} - {} - {}".format(stock_df[[key1]].values[0],stock_df[[key2]].values[0],stock_df[[key3]].values[0]))
+                str_list.append(" {} - {} - {} - {} ".format(stock_df[[key1]].values[0],stock_df[[key2]].values[0],stock_df[[key3]].values[0],stock_df[[key4]].values[0]))
                 # print(" {} - {} - {}".format(stock_df[[key1]].values[0],stock_df[[key2]].values[0],stock_df[[key3]].values[0]))
         except:
             print("Date Not available ",stock_id_list[i])
@@ -103,11 +104,11 @@ if __name__ == "__main__":
         # d = data.tolist()
         # arr.columns = d[0]
 
-        arr.columns = ['x','代碼', '股票名稱', '股東會日期','除息日程','x','x', 'x', 'x','x','x','x', 'x', 'x','x','x','x', 'x', 'x','x']
+        arr.columns = ['x','代碼', '股票名稱', '股東會日期','除息日程','x','x', 'x', '發放日','x','x','x', 'x', 'x','x','x','x', 'x', 'x','x']
 
         print(arr.columns)
-        df = arr[['代碼', '股票名稱', '股東會日期','除息日程']]
-        df = df.iloc[:,:4]
+        df = arr[['代碼', '股票名稱', '股東會日期','除息日程','發放日']]
+        df = df.iloc[:,:5]
 
         print_stock_divined_date(df)
     else:
