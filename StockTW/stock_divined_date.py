@@ -4,7 +4,6 @@ import os
 import seleuim_get_goodinfo as goodinfo_se
 import send_line as sl
 
-file_name_ = 'tw_stock_div_data.txt'
 
 def count_file_lines(file_):
     file = open(file_,"r") 
@@ -23,6 +22,9 @@ def count_file_lines(file_):
 def write_to_file(str_a):
     s1 = 0
     s2 = 0
+
+    pwd_ = os.path.expanduser('~') + '/'
+    file_name_ = pwd_ + 'Documents/Github/OftenUsed/StockTW/tw_stock_div_data.txt'
 
     # with open(file_name_,'r') as f:
     #     print("The size 1 of {} ".format(f.__sizeof__()))
@@ -96,9 +98,14 @@ if __name__ == "__main__":
         # print(arr)
 
         # To get columns value name
-        data = np.array(arr[len(arr)-3:len(arr)-2])
-        d = data.tolist()
-        arr.columns = d[0]
+        # data = np.array(arr[len(arr)-3:len(arr)-2])
+        # data = np.array(arr[0:1])
+        # d = data.tolist()
+        # arr.columns = d[0]
+
+        arr.columns = ['x','代碼', '股票名稱', '股東會日期','除息日程','x','x', 'x', 'x','x','x','x', 'x', 'x','x','x','x', 'x', 'x','x']
+
+        print(arr.columns)
         df = arr[['代碼', '股票名稱', '股東會日期','除息日程']]
         df = df.iloc[:,:4]
 
