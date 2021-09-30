@@ -99,7 +99,7 @@ if __name__ == "__main__":
     out = find_match_day_off(start,dayoff_df)
 
     if (len(out) > 0):
-        sl.lineNotify(out)
+        sl.lineNotify_fw3_leader(out)
         # To send out Email as well
         str1 = ''.join(out)
         efs.sendEmail_text('FW3 Day Off Info',str1)
