@@ -61,7 +61,7 @@ def find_match_day_off(start_,df_):
 
     for idx,time in enumerate(start_):
         if time.date() == today or time.date() == tomorrow :
-            out_str.append("day Off = {} , Name = {} , Reason = {}".format(times_ls[idx],names_ls[idx],reasons_ls[idx]))
+            out_str.append("day Off = {} , Name = {} , Reason = {} \n".format(times_ls[idx],names_ls[idx],reasons_ls[idx]))
 
     return out_str
 
