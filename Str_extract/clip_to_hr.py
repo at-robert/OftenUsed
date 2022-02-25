@@ -3,7 +3,7 @@ import re
 import codecs
 
 #----------------------------------------------------------------------
-def check_file_(file_r_, file_w_):
+def remove_str_from_(file_r_, file_w_):
 
     with open(file_r_ , 'r', encoding = "utf8") as f:
         for line in f:
@@ -24,6 +24,22 @@ def check_file_(file_r_, file_w_):
             with open(file_w_, 'a', encoding = "utf8") as the_file:
                 the_file.write(str)
 
+
+#----------------------------------------------------------------------
+def clear_file_(file_):
+    text_file = open(file_, "w", encoding = "utf8")
+    text_file.write('')
+    text_file.close()
+
+
+#----------------------------------------------------------------------
+def remove_empty_line(file_):
+    with open(file_, 'r+', encoding = "utf8") as fd:
+        lines = fd.readlines()
+        fd.seek(0)
+        fd.writelines(line for line in lines if line.strip())
+        fd.truncate()
+
 #----------------------------------------------------------------------
 if __name__ == "__main__":
 
@@ -36,15 +52,7 @@ if __name__ == "__main__":
     with open(filename2, 'w', encoding = "utf8") as the_file:
         the_file.write(text)
 
-    with open(filename2, 'r+', encoding = "utf8") as fd:
-        lines = fd.readlines()
-        fd.seek(0)
-        fd.writelines(line for line in lines if line.strip())
-        fd.truncate()
+    remove_empty_line(filename2)
+    clear_file_(filename3)
 
-    text_file = open(filename3, "w", encoding = "utf8")
-    text_file.write('')
-    text_file.close()
-
-
-    check_file_(filename2,filename3)
+    remove_str_from_(filename2,filename3)
