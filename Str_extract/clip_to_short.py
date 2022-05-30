@@ -63,3 +63,7 @@ if __name__ == "__main__":
     clear_file_(filename3)
     remove_str_from_file_(filename2,filename3,'"結論：')
 
+    with open(filename3,'r',encoding = "utf8") as f:
+        StrA = "".join(f)
+        clipboard.copy(StrA)
+
