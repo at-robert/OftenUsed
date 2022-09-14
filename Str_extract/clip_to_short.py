@@ -9,6 +9,7 @@ def remove_str_from_file_(file_r_, file_w_,pattern_):
         for line in f:
             str = line
             str = re.sub(pattern_, '', str)
+            str = re.sub('結論:', '', str)
 
                 
             # print (str)
@@ -48,8 +49,8 @@ if __name__ == "__main__":
     text = clipboard.paste()  # text will have the content of clipboard
     print (text)
 
-    filename2 = "z:\\temp2.txt"
-    filename3 = "z:\\temp3.txt"
+    filename2 = "D:\\work_platform\\temp2.txt"
+    filename3 = "D:\\work_platform\\temp3.txt"
 
     # To write clipboard content into the filename2
     with open(filename3, 'w', encoding = "utf8") as the_file:

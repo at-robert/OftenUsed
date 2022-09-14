@@ -23,6 +23,12 @@ def check_file_(file_r_, file_w_):
 
             if(str == line):
                 str = re.sub('^.* 104自訂配對人選【.*】', ' ', str)
+
+            if(str == line):
+                str = re.sub('^.*	RE: 104應徵履歷【.*】', ' ', str)
+
+            if(str == line):
+                str = re.sub('104配對人選	104自訂配對人選【.*】','',str)
                 
             # print (str)
             str_a = str.split('(')
@@ -42,8 +48,8 @@ if __name__ == "__main__":
     text = clipboard.paste()  # text will have the content of clipboard
     print (text)
 
-    filename2 = "z:\\temp2.txt"
-    filename3 = "z:\\temp3.txt"
+    filename2 = "D:\\work_platform\\temp2_1.txt"
+    filename3 = "D:\\work_platform\\temp3_1.txt"
 
     with open(filename2, 'w', encoding = "utf8") as the_file:
         the_file.write(text)
