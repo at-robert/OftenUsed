@@ -33,10 +33,10 @@ def main():
     d = datetime.datetime.utcnow().date()
     print("Month = {} ".format(d.month))
 
-    tomorrow = datetime.datetime(d.year, 1, 1, 10)
+    tomorrow = datetime.datetime(d.year, d.month, d.day - 1, 0)
     now = tomorrow.isoformat() + 'Z'
 
-    print('Getting List to 10 events')
+    print('Getting List on yesterday, today and tomrrow events')
 
     for i in range(0,2):
         events_result = service.events().list(calendarId=cal_id[i], timeMin=now,
@@ -51,7 +51,7 @@ def main():
             start = start[0:10]
             dt_start = datetime.datetime.strptime(start, "%Y-%m-%d")
 
-            if( dt_start <  datetime.datetime.utcnow()):
+            if( dt_start <  datetime.datetime.utcnow() + datetime.timedelta(days=1)):
                 print(start, event['summary'])
                 # To store to pandas dataframe
                 date_.append(start)
