@@ -3,6 +3,8 @@ from tkinter.tix import MAX
 import pandas as pd
 from cal_setup import get_calendar_service
 
+# How to get Google Calendar ID, please refer to the following Evernote "Google Calendar Read" article
+CAL_ID_FINISH_TASK = '5h3ema8s5bbua11vdh1vcopfpk@group.calendar.google.com'
 
 def out_to_csv(date_in, sum_):
 
@@ -20,7 +22,7 @@ def out_to_csv(date_in, sum_):
     
 
 def main():
-    cal_id = ['primary','5h3ema8s5bbua11vdh1vcopfpk@group.calendar.google.com']
+    cal_id = ['primary',CAL_ID_FINISH_TASK]
     date_ = []
     summary_ = []
     MAX_OUT = 500
@@ -36,7 +38,7 @@ def main():
     tomorrow = dt.datetime(d.year, 1, 1, 10)
     now = tomorrow.isoformat() + 'Z'
 
-    print('Getting List to 10 events')
+    print('Getting List on yesterday, today and tomrrow events')
 
     for i in range(0,2):
         events_result = service.events().list(calendarId=cal_id[i], timeMin=now,
