@@ -2,9 +2,12 @@
 import os
 import openai
 import re
+import platform
 
 
 FILE_PATH_OPENAI_CERT=r"D:\work_platform\CERT\openai_cert"
+
+FILE_PATH_MACOS_OPENAI_CERT= 'Documents/CERT/openai_cert'
 
 
 #----------------------------------------------------------------------
@@ -27,7 +30,13 @@ if __name__ == "__main__":
     pwd = os.path.expanduser('~') + '/'
     cert_data = []
 
-    search_auth_file(FILE_PATH_OPENAI_CERT,cert_data)
+    if platform.system() == 'Darwin':
+        print("It's Mac OS system!!")
+        path_ = pwd + FILE_PATH_MACOS_OPENAI_CERT
+    else:
+        path_ = FILE_PATH_OPENAI_CERT
+
+    search_auth_file(path_,cert_data)
     print(cert_data[0])
 
     openai.api_key = cert_data[0]
