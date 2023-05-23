@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 from tkinter.tix import MAX
 import pandas as pd
 from cal_setup import get_calendar_service
@@ -15,8 +15,10 @@ def out_to_csv(date_in, sum_):
     cal_dict_df = pd.DataFrame(cal_dict)
 
     cal_dict_df.sort_values(by=['date'],ascending=True,inplace=True)
+
     # To output to csv file
-    cal_dict_df.to_csv('cal_.csv', encoding='utf-8', index=False)
+    year_i = dt.datetime.today().year
+    cal_dict_df.to_csv(str(year_i) + '_cal_.csv', encoding='utf-8', index=False)
     
 
 def main():
@@ -28,12 +30,12 @@ def main():
 
     service = get_calendar_service()
     # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time{}
+    now = dt.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time{}
 
-    d = datetime.datetime.utcnow().date()
+    d = dt.datetime.utcnow().date()
     print("Month = {} ".format(d.month))
 
-    tomorrow = datetime.datetime(d.year, d.month, d.day - 1, 0)
+    tomorrow = dt.datetime(d.year, 1, 1, 10)
     now = tomorrow.isoformat() + 'Z'
 
     print('Getting List on yesterday, today and tomrrow events')
@@ -49,9 +51,9 @@ def main():
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             start = start[0:10]
-            dt_start = datetime.datetime.strptime(start, "%Y-%m-%d")
+            dt_start = dt.datetime.strptime(start, "%Y-%m-%d")
 
-            if( dt_start <  datetime.datetime.utcnow() + datetime.timedelta(days=1)):
+            if( dt_start <  dt.datetime.utcnow()):
                 print(start, event['summary'])
                 # To store to pandas dataframe
                 date_.append(start)
