@@ -6,6 +6,8 @@ def get_stock_list():
     stock_list.append(['中信金','2891'])
     stock_list.append(['聯華食','1231'])
     stock_list.append(['聯華','1229'])
+    stock_list.append(['國泰高股息','00878'])
+    stock_list.append(['元大高股息','0056'])
     return stock_list
 
 def get_stock_thre():
@@ -14,6 +16,8 @@ def get_stock_thre():
     thre_dic['統一'] = 60
     thre_dic['聯華食'] = 30
     thre_dic['中信金'] = 35
+    thre_dic['國泰高股息'] = 17
+    thre_dic['元大高股息'] = 29
     return thre_dic
 
 def get_stock_default():

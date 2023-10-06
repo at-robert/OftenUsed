@@ -111,7 +111,7 @@ if __name__ == "__main__":
     # web.find_element("id",'loginanswer_row_'+id_).send_keys("Taipai")
 
     web.find_element("name",'answer').send_keys(key_data[0])
-    # web.find_element("name","loginsubmit").click()
+    web.find_element("name","loginsubmit").click()
 
 
     # try:
