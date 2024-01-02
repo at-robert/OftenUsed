@@ -28,7 +28,9 @@ def search_auth_file(folder, cert_data_):
 #----------------------------------------------------------------------
 if __name__ == "__main__":
 
-    start_date = datetime.date(2023, 5, 1)
+    # start_date = datetime.date(2024, 1, 1)
+    start_date = datetime.date.today()
+    # print("Start Date = ",datetime.date.today())
     end_date = start_date + datetime.timedelta(days=180)
 
     pwd = os.path.expanduser('~') + '/'
