@@ -7,8 +7,8 @@ import os
 
 
 
-stock_ids = ['2105', '3045', '2412', '2892', '0056', '00878']
-stock_names = ['正新','台灣大','中華電','第一金','元大高股息','國泰高股息']
+stock_ids = ['2105', '3045', '2412', '2892', '0056', '00878' , '00919']
+stock_names = ['正新','台灣大','中華電','第一金','元大高股息','國泰高股息','群益高股息']
 FILE_PATH_FINMIND_CERT=r"D:\work_platform\CERT\finmind"
 FILE_PATH_MACOS_FINMIND_CERT= 'Documents/CERT/finmind'
 
