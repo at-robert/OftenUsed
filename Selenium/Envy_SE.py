@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     web.get(url)
     web.set_window_position(0,0)
-    web.set_window_size(1442,1051)
+    web.set_window_size(1442 + 610 ,1071)
     # web.find_element_by_name("submit").click()
     # web.find_element_by_link_text('登錄').click()
     web.find_element("link text", "登錄").click()
