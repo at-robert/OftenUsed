@@ -25,7 +25,7 @@ def extract_frames(video_path, output_folder, frame_interval=30, start_time=0):
             break  # 影片結束
         
         if frame_count % frame_interval == 0:
-            image_path = os.path.join(output_folder, f"frame_{image_count:04d}.jpg")
+            image_path = os.path.join(output_folder, f"frame_{image_count:04d}.png")
             cv2.imwrite(image_path, frame)
             # print(f"已保存: {image_path}")
             image_count += 1
@@ -46,6 +46,6 @@ filedir = pwd + 'Downloads/'
 video_file = sys.argv[1]
 output_directory = "output_frames"  # 存放圖片的資料夾
 frame_interval = 45  # 每 30 個影格擷取一張
-start_time = 180  # 從 10 秒開始擷取
+start_time = 1045  # 從 10 秒開始擷取
 
 extract_frames(filedir + video_file, filedir + output_directory, frame_interval, start_time)
