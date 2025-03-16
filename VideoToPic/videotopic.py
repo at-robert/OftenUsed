@@ -2,7 +2,7 @@ import cv2
 import os
 import sys
 
-def extract_frames(video_path, output_folder, frame_interval=30, start_time=0):
+def extract_frames(video_path, output_folder, frame_interval=30, start_time=0, end_time=None):
     # 確保輸出資料夾存在
     os.makedirs(output_folder, exist_ok=True)
     
@@ -18,11 +18,19 @@ def extract_frames(video_path, output_folder, frame_interval=30, start_time=0):
     frame_count = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     image_count = 0
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    
+    # 計算結束影格數
+    end_frame = total_frames if end_time is None else int(end_time * fps)
     
     while True:
         ret, frame = cap.read()
         if not ret:
             break  # 影片結束
+
+        if frame_count >= end_frame:
+            break  # 達到結束時間
         
         if frame_count % frame_interval == 0:
             image_path = os.path.join(output_folder, f"frame_{image_count:04d}.png")
@@ -46,6 +54,7 @@ filedir = pwd + 'Downloads/'
 video_file = sys.argv[1]
 output_directory = "output_frames"  # 存放圖片的資料夾
 frame_interval = 45  # 每 30 個影格擷取一張
-start_time = 1045  # 從 10 秒開始擷取
+start_time = 269  # 從 10 秒開始擷取
+end_time = 389 # 結束時間
 
-extract_frames(filedir + video_file, filedir + output_directory, frame_interval, start_time)
+extract_frames(filedir + video_file, filedir + output_directory, frame_interval, start_time, end_time)
