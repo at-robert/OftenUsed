@@ -54,7 +54,7 @@ filedir = pwd + 'Downloads/'
 video_file = sys.argv[1]
 output_directory = "output_frames"  # 存放圖片的資料夾
 frame_interval = 45  # 每 30 個影格擷取一張
-start_time = 269  # 從 10 秒開始擷取
-end_time = 389 # 結束時間
+start_time = 95  # 從 10 秒開始擷取
+end_time = 547 # 結束時間
 
 extract_frames(filedir + video_file, filedir + output_directory, frame_interval, start_time, end_time)
