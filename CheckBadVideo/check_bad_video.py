@@ -8,7 +8,7 @@ import stat
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi", ".flv", ".wmv"}
 
 # 指定要掃描的資料夾
-SCAN_DIR = "/Volumes/T7/v"  # ← 請替換成你自己的資料夾路徑
+SCAN_DIR = "/Volumes/HDD_8T/v202204011200/"  # ← 請替換成你自己的資料夾路徑
 
 def get_mime_type(path: Path) -> str:
     """使用 file 命令獲取真實 MIME 類型描述"""
@@ -48,7 +48,9 @@ def check_file(path: Path):
         # print("✅ 判斷為影片檔")
         i = 1
     else:
-        print(f"\n🔍 檢查檔案: {path.name}")
+        abs_path = path.resolve()
+        print(f"\n🔍 檢查檔案：{abs_path}")
+        # print(f"\n🔍 檢查檔案: {path.name}")
         print(f"📄 檔案 MIME 類型：{mime_info}")
         print("⚠️  非典型影片檔，請進一步檢查")
 
@@ -58,5 +60,12 @@ def scan_directory(dir_path):
         if entry.is_file() and is_video_file(entry):
             check_file(entry)
 
+def scan_directory_recursive(dir_path: Path):
+    print(f"\n📂 掃描資料夾: {dir_path}")
+    for file_path in dir_path.rglob("*"):
+        if file_path.is_file() and is_video_file(file_path):
+            check_file(file_path)
+
 if __name__ == "__main__":
-    scan_directory(SCAN_DIR)
+    # scan_directory(SCAN_DIR)
+    scan_directory_recursive(Path(SCAN_DIR))
