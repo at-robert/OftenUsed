@@ -16,7 +16,7 @@ google_sheet_name = "2025 FW_HR_List"
 spreadsheet = client.open(google_sheet_name)
 worksheets = spreadsheet.worksheets()
 
-output_path = pwd + "Downloads/2025 FW_HR_List.xlsx"
+output_path = pwd + "Downloads/" + google_sheet_name + ".xlsx"
 skipped_sheets = []
 
 def clean_headers(headers):
