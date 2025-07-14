@@ -31,15 +31,15 @@ def main(file_path):
 
     counter = Counter(names)
 
-    print("重複的三字中文名字如下：")
+    # print("重複的三字中文名字如下：")
     found = False
     for name, count in counter.items():
         if count > 1:
             print(f"{name}（共出現 {count} 次）")
             found = True
 
-    if not found:
-        print("未找到重複的三字中文名字。")
+    # if not found:
+    #     print("未找到重複的三字中文名字。")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2 or not sys.argv[1].endswith(".xlsx"):
