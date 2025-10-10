@@ -29,6 +29,7 @@ for stream in yt.streams:
 
 
 if res_str != None:
-    yt.streams.filter(res=res_str).first().download(output_path=filedir)
+    filename_ = yt.streams.filter(res=res_str).first().download(output_path=filedir)
+    print(" Output file Name = {}".format(filename_))
 else:
     print("There is No HD or FHD video")
