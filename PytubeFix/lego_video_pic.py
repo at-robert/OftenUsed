@@ -1,6 +1,9 @@
 import cv2
-import os
 import sys
+import os
+from pytubefix import YouTube
+from pytubefix.cli import on_progress
+
 
 def extract_frames(video_path, output_folder, frame_interval=30, start_time=0, end_time=None):
     # 確保輸出資料夾存在
@@ -47,14 +50,43 @@ def extract_frames(video_path, output_folder, frame_interval=30, start_time=0, e
     cap.release()
     print("影格擷取完成！")
 
-# 使用範例
 pwd = os.path.expanduser('~') + '/'
 filedir = pwd + 'Downloads/'
-# video_file = "Fire Salamander LEGO 31129 Digital Build.mp4"  # 影片檔案路徑
-video_file = sys.argv[1]
-output_directory = "output_frames"  # 存放圖片的資料夾
-frame_interval = 45  # 每 30 個影格擷取一張
-start_time = 205  # 從 10 秒開始擷取
-end_time = 860 # 結束時間
 
-extract_frames(filedir + video_file, filedir + output_directory, frame_interval, start_time, end_time)
+# Get the YouTube video URL from command-line arguments
+youtube_url = sys.argv[1]
+
+url = youtube_url
+
+yt = YouTube(url, on_progress_callback=on_progress)
+print(yt.title)
+
+# ys = yt.streams.get_highest_resolution()
+# ys.download(output_path=filedir)
+
+res_str = None
+# 列出可用的串流
+for stream in yt.streams:
+    if(stream.resolution == "720p" or stream.resolution == "1080p"):
+        res_str = stream.resolution
+    print(stream.resolution)
+    if stream.resolution == "1080p":
+        break
+
+
+if res_str != None:
+    filename_ = yt.streams.filter(res=res_str).first().download(output_path=filedir)
+    print(" Output file Name = {}".format(filename_))
+
+    output_directory = "output_frames"  # 存放圖片的資料夾
+
+    # frame_interval = 45  # 每 30 個影格擷取一張
+    # start_time = 205  # 從 10 秒開始擷取
+    # end_time = 860 # 結束時間
+    frame_interval = int(sys.argv[2])
+    start_time = int(sys.argv[3])
+    end_time = int(sys.argv[4])
+    
+    extract_frames(filename_, filedir + output_directory, frame_interval, start_time, end_time)
+else:
+    print("There is No HD or FHD video")
