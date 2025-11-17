@@ -1,0 +1,1 @@
+pyinstaller --clean -F -w --distpath ./ -n "ATP_tools" at_tools_gui.py

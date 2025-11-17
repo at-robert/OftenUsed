@@ -1,0 +1,275 @@
+import tkinter as tk
+from tkinter import filedialog, ttk
+import pandas as pd
+
+
+def find_sheet_by_keyword(file_path, keyword="Purchase Order Data"):
+    """
+    在 Excel 每個 sheet 中搜尋是否存在指定字串，並回傳所有符合的 sheet 名稱。
+    """
+    xl = pd.ExcelFile(file_path)  # 先讀取 workbook
+    matched_sheets = []
+
+    for sheet in xl.sheet_names:
+        df = pd.read_excel(file_path, sheet_name=sheet, header=None, dtype=str)
+
+        # 檢查整個 sheet 是否有 keyword
+        if df.applymap(lambda x: keyword in x if isinstance(x, str) else False).any().any():
+            matched_sheets.append(sheet)
+
+    return matched_sheets
+
+
+def read_from_client(file_, sheet_):
+    # 先讀整個 sheet（不含 header）
+    df_raw = pd.read_excel(file_, sheet_, header=None)
+    
+    # 取第 11 列 (index = 10) 作為欄位名稱
+    new_header = df_raw.iloc[12]
+    
+    # 重新設定欄位名稱 + 取 header 下面的資料
+    df = df_raw[13:].copy()
+    df.columns = new_header
+    
+    # Step 4: 只留下三個欄位
+    wanted_cols = ["PO_NUMBER","PO_LINE","NEW_REQUEST_DATE", "SUPPLIER_CONFIRM_DATE"]
+    
+    # 若欄名有前後空白或大小寫不同，可用這種方式比對
+    df.columns = df.columns.str.strip()
+    
+    df = df[wanted_cols]
+    
+    # Step 5: index 重新編號
+    df = df.reset_index(drop=True)
+
+
+    # 先把字串轉成 datetime
+    df["NEW_REQUEST_DATE"] = pd.to_datetime(df["NEW_REQUEST_DATE"], format="%m/%d/%Y")
+    
+    # 計算上一個星期二 (weekday: Tuesday = 1)
+    # dt.weekday：Monday=0, Tuesday=1, ... Sunday=6
+    df["LAST_TUESDAY"] = df["NEW_REQUEST_DATE"] - pd.to_timedelta(
+        (df["NEW_REQUEST_DATE"].dt.weekday - 1) % 7,
+        unit="D"
+    )
+    
+    # 格式化成 yyyy-mm-dd
+    df["LAST_TUESDAY"] = df["LAST_TUESDAY"].dt.strftime("%Y/%m/%d")
+
+    df["PO_LINE"] = pd.to_numeric(df["PO_LINE"], errors="coerce")
+    df["PO_LINE"] = df["PO_LINE"].fillna(0)
+    
+    return df
+
+def read_from_EU_OO(file_,sheet_,filter_):
+    df_raw = pd.read_excel(file_, sheet_, header=None)
+    # 取第 11 列 (index = 10) 作為欄位名稱
+    new_header = df_raw.iloc[0]
+    
+    # 重新設定欄位名稱 + 取 header 下面的資料
+    df = df_raw[1:].copy()
+    df.columns = new_header
+    
+    # Step 4: 只留下三個欄位
+    wanted_cols = ["Sold-to Abbreviation", "Customer Reference","Customer PO Item No", "CRD","Close","ETD"]
+    
+    # 若欄名有前後空白或大小寫不同，可用這種方式比對
+    df.columns = df.columns.str.strip()
+    
+    df = df[wanted_cols]
+    
+    # Step 5: index 重新編號
+    df = df.reset_index(drop=True)
+
+    # df = df[df['Sold-to Abbreviation'] == filter_]
+
+    df_filtered = df[
+    (df["Sold-to Abbreviation"] == filter_) &
+    (df["Close"].fillna("") == "")
+]
+    df = df_filtered
+
+    df["Customer PO Item No"] = pd.to_numeric(df["Customer PO Item No"], errors="coerce")
+    df["Customer PO Item No"] = df["Customer PO Item No"].fillna(0)
+    
+    return df
+
+
+def reorder_by_reference_multi(df_main, keys_main, df_ref, keys_ref, drop_missing=True):
+    """
+    根據 df_ref 的 keys_ref 的順序，重新排列 df_main 的 keys_main 的順序。
+    支援 df_main 重複 key。
+
+    參數:
+        df_main     : 要被排序的 DataFrame
+        keys_main   : df_main 的欄位清單，例如 ["PO_NUMBER", "PO_LINE"]
+        df_ref      : 提供排序的 DataFrame
+        keys_ref    : df_ref 對應欄位清單，例如 ["Customer Reference", "Customer PO Item No"]
+        drop_missing: 是否丟掉 df_main 中沒有對應 df_ref 的資料
+
+    回傳:
+        排序後的新 DataFrame
+    """
+    # Step 1: 建立排序用的 sort_order
+    df_ref_sorted = df_ref[keys_ref].drop_duplicates().copy()
+    df_ref_sorted["sort_order"] = range(len(df_ref_sorted))
+
+    # Step 2: merge df_main 與 df_ref_sorted
+    df_merged = df_main.merge(
+        df_ref_sorted,
+        left_on=keys_main,
+        right_on=keys_ref,
+        how="left"
+    )
+
+    # Step 3: drop 沒有對應的資料
+    if drop_missing:
+        df_merged = df_merged.dropna(subset=["sort_order"])
+
+    # Step 4: 依 sort_order 排序
+    df_merged = df_merged.sort_values("sort_order").reset_index(drop=True)
+
+    # Step 5: 移除輔助欄位
+    df_merged = df_merged.drop(columns=keys_ref + ["sort_order"], errors='ignore')
+
+    return df_merged
+
+class App:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("ATP EU OO Tools")
+        self.root.geometry("1750x880")     # 稍微加高以容納新按鍵
+
+        # 字型設定
+        self.font_large = ("Arial", 14)
+        self.font_button = ("Arial", 14, "bold")
+
+        self.build_ui()
+
+    # -------------------------------
+    # GUI Layout
+    # -------------------------------
+    def build_ui(self):
+
+        # ---- df1 ----
+        tk.Label(self.root, text="Client給的檔案：", font=self.font_large)\
+            .grid(row=0, column=0, padx=10, pady=10, sticky="w")
+
+        self.df1_path = tk.StringVar()
+        tk.Entry(self.root, textvariable=self.df1_path, width=50, font=self.font_large)\
+            .grid(row=0, column=1, padx=10)
+
+        tk.Button(self.root, text="選擇檔案", font=self.font_button, width=12,
+                  command=self.choose_df1)\
+            .grid(row=0, column=2, padx=10)
+
+        # ---- df2 ----
+        tk.Label(self.root, text="EU OO檔案：", font=self.font_large)\
+            .grid(row=1, column=0, padx=10, pady=10, sticky="w")
+
+        self.df2_path = tk.StringVar()
+        tk.Entry(self.root, textvariable=self.df2_path, width=50, font=self.font_large)\
+            .grid(row=1, column=1, padx=10)
+
+        tk.Button(self.root, text="選擇檔案", font=self.font_button, width=12,
+                  command=self.choose_df2)\
+            .grid(row=1, column=2, padx=10)
+
+        # ---- Start Processing Button ----
+        tk.Button(self.root, text="算出上個星期二", font=self.font_button,
+                  width=15, height=2, bg="#4CAF50", fg="white",
+                  command=self.run_process)\
+            .grid(row=2, column=0, columnspan=3, pady=10)
+
+        # ---- ⭐ 新增一顆按鍵在下面 ⭐ ----
+        tk.Button(self.root, text="算出ETD回給Client", font=self.font_button,
+                  width=15, height=2, bg="#2196F3", fg="white",
+                  command=self.additional_action)\
+            .grid(row=3, column=0, columnspan=3, pady=10)
+
+        # ---- Right-side Message Area ----
+        tk.Label(self.root, text="訊息/結果：", font=self.font_large)\
+            .grid(row=0, column=3, sticky="nw", padx=5)
+
+        self.msg = tk.Text(self.root, width=80, height=50, font=("Consolas", 10))
+        self.msg.grid(row=1, column=3, rowspan=20, padx=10)
+
+    # -------------------------------
+    # File Choosers
+    # -------------------------------
+    def choose_df1(self):
+        filename = filedialog.askopenfilename(
+            title="選擇 Client給的檔案",
+            filetypes=[("Excel Files", "*.xlsx")]
+        )
+        if filename:
+            self.df1_path.set(filename)
+
+    def choose_df2(self):
+        filename = filedialog.askopenfilename(
+            title="選擇 EU OO檔案",
+            filetypes=[("Excel Files", "*.xlsx")]
+        )
+        if filename:
+            self.df2_path.set(filename)
+
+    # -------------------------------
+    # Main Processing
+    # -------------------------------
+    def run_process(self):
+        self.msg.delete("1.0", tk.END)
+
+        # self.msg.insert(tk.END, "開始處理 df1 & df2...\n")
+        # self.msg.insert(tk.END, f"DF1: {self.df1_path.get()}\n")
+        # self.msg.insert(tk.END, f"DF2: {self.df2_path.get()}\n\n")
+        self.msg.insert(tk.END, "算出上個星期二 Client->EU OO\n")
+
+        # Client Order 
+        file_path = self.df1_path.get()
+        sheet_name = find_sheet_by_keyword(file_path)
+        df1 = read_from_client(file_path,sheet_name[0])
+
+        # EU Open Order
+        file_path = self.df2_path.get()
+        sheet_name = "Marco & Mathias (Mandy)"
+        df2 = read_from_EU_OO(file_path,sheet_name,'FLEX NL')
+
+        # ====== 這裡放你要的處理邏輯 ======
+        # 目前示範：只印 df1 的前 50 rows
+        # 未來你把你的 df 新排列邏輯貼上即可
+        df_new = reorder_by_reference_multi(
+        df_main=df1,
+        keys_main=["PO_NUMBER", "PO_LINE"],
+        df_ref=df2,
+        keys_ref=["Customer Reference", "Customer PO Item No"],
+        drop_missing=True
+)
+
+        self.msg.insert(tk.END, " Number of Rows = {} \n".format(len(df_new)))
+        self.msg.insert(tk.END, df_new.to_string(index=False))
+
+        df_new.to_csv("df_last_tues.csv", index=False, encoding="utf-8-sig")
+
+    # -------------------------------
+    # ⭐ 新增按鍵對應的 function ⭐
+    # -------------------------------
+    def additional_action(self):
+        # self.msg.insert(tk.END, "\n--- 下一步動作按下 ---\n")
+        self.msg.insert(tk.END, "算出Client的ETD\n")
+
+        # EU Open Order
+        file_path = self.df2_path.get()
+        sheet_name = "Marco & Mathias (Mandy)"
+        df2 = read_from_EU_OO(file_path,sheet_name,'FLEX NL')
+
+        self.msg.insert(tk.END, " Number of Rows = {} \n".format(len(df2)))
+        self.msg.insert(tk.END, df2['ETD'].to_string(index=False))
+
+
+# -------------------------------
+# 啟動 App
+# -------------------------------
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = App(root)
+    root.mainloop()
