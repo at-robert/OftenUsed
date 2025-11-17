@@ -95,6 +95,43 @@ def read_from_EU_OO(file_,sheet_,filter_):
     return df
 
 
+def read_from_EU_OO_v2(file_,sheet_,filter_):
+    df_raw = pd.read_excel(file_, sheet_, header=None)
+    # 取第 11 列 (index = 10) 作為欄位名稱
+    new_header = df_raw.iloc[0]
+    
+    # 重新設定欄位名稱 + 取 header 下面的資料
+    df = df_raw[1:].copy()
+    df.columns = new_header
+    
+    # Step 4: 只留下三個欄位
+    wanted_cols = ["Sold-to Abbreviation", "Customer Reference","Customer PO Item No", "CRD","Close","ETD"]
+    
+    # 若欄名有前後空白或大小寫不同，可用這種方式比對
+    df.columns = df.columns.str.strip()
+    
+    df = df[wanted_cols]
+    
+    # Step 5: index 重新編號
+    df = df.reset_index(drop=True)
+
+    # df = df[df['Sold-to Abbreviation'] == filter_]
+
+    df_filtered = df[
+    (df["Sold-to Abbreviation"] == filter_) &
+    (df["Close"].fillna("") == "")
+]
+    df = df_filtered
+
+    df["Customer PO Item No"] = pd.to_numeric(df["Customer PO Item No"], errors="coerce")
+    df["Customer PO Item No"] = df["Customer PO Item No"].fillna(0)
+
+    df["ETD"] = pd.to_datetime(df["ETD"], format="%m/%d/%Y")
+    df["ETD"] = df["ETD"].dt.strftime("%m/%d/%Y")
+    
+    return df
+
+
 def reorder_by_reference_multi(df_main, keys_main, df_ref, keys_ref, drop_missing=True):
     """
     根據 df_ref 的 keys_ref 的順序，重新排列 df_main 的 keys_main 的順序。
@@ -133,6 +170,33 @@ def reorder_by_reference_multi(df_main, keys_main, df_ref, keys_ref, drop_missin
     df_merged = df_merged.drop(columns=keys_ref + ["sort_order"], errors='ignore')
 
     return df_merged
+
+
+def check_columns_equal(df1, df2, col1="PO_NUMBER", col2="Customer Reference"):
+    # 檢查長度
+    if len(df1[col1]) != len(df2[col2]):
+        return {
+            "result": False,
+            "reason": f"Length not match: df1={len(df1[col1])}, df2={len(df2[col2])}"
+        }
+
+    # 使用 pandas Series.equals() → 內容 + 順序 都要一樣
+    if df1[col1].reset_index(drop=True).equals(df2[col2].reset_index(drop=True)):
+        return {
+            "result": True,
+            "reason": "Columns match in both content and order."
+        }
+    else:
+        # 找出不一致位置
+        mismatches = df1[col1].reset_index(drop=True) != df2[col2].reset_index(drop=True)
+        mismatch_indices = mismatches[mismatches].index.tolist()
+        return {
+            "result": False,
+            "reason": f"Found {len(mismatch_indices)} mismatches.",
+            "indices": mismatch_indices,
+            "df1_values": df1[col1].iloc[mismatch_indices].tolist(),
+            "df2_values": df2[col2].iloc[mismatch_indices].tolist(),
+        }
 
 class App:
     def __init__(self, root):
@@ -177,13 +241,13 @@ class App:
 
         # ---- Start Processing Button ----
         tk.Button(self.root, text="算出上個星期二", font=self.font_button,
-                  width=15, height=2, bg="#4CAF50", fg="white",
+                  width=15, height=2, bg="#4CAF50", fg="blue",
                   command=self.run_process)\
             .grid(row=2, column=0, columnspan=3, pady=10)
 
         # ---- ⭐ 新增一顆按鍵在下面 ⭐ ----
         tk.Button(self.root, text="算出ETD回給Client", font=self.font_button,
-                  width=15, height=2, bg="#2196F3", fg="white",
+                  width=15, height=2, bg="#2196F3", fg="blue",
                   command=self.additional_action)\
             .grid(row=3, column=0, columnspan=3, pady=10)
 
@@ -219,9 +283,10 @@ class App:
     def run_process(self):
         self.msg.delete("1.0", tk.END)
 
-        # self.msg.insert(tk.END, "開始處理 df1 & df2...\n")
-        # self.msg.insert(tk.END, f"DF1: {self.df1_path.get()}\n")
-        # self.msg.insert(tk.END, f"DF2: {self.df2_path.get()}\n\n")
+        if not self.df1_path.get() or not self.df2_path.get():
+            self.msg.insert(tk.END, "請先選擇檔案們\n")
+            return
+
         self.msg.insert(tk.END, "算出上個星期二 Client->EU OO\n")
 
         # Client Order 
@@ -245,25 +310,58 @@ class App:
         drop_missing=True
 )
 
-        self.msg.insert(tk.END, " Number of Rows = {} \n".format(len(df_new)))
-        self.msg.insert(tk.END, df_new.to_string(index=False))
+        ret = check_columns_equal(df_new,df2)
 
-        df_new.to_csv("df_last_tues.csv", index=False, encoding="utf-8-sig")
+        if ret['result'] == False:
+            self.msg.insert(tk.END,str(ret))
+        else:
+            self.msg.insert(tk.END, " Number of Rows = {} \n".format(len(df_new)))
+            self.msg.insert(tk.END, df_new['LAST_TUESDAY'].to_string(index=False))
+
+            df_new.to_csv("df_last_tues.csv", index=False, encoding="utf-8-sig")
 
     # -------------------------------
     # ⭐ 新增按鍵對應的 function ⭐
     # -------------------------------
     def additional_action(self):
+        self.msg.delete("1.0", tk.END)
+
+        if not self.df1_path.get() or not self.df2_path.get():
+            self.msg.insert(tk.END, "請先選擇檔案們\n")
+            return
+    
         # self.msg.insert(tk.END, "\n--- 下一步動作按下 ---\n")
         self.msg.insert(tk.END, "算出Client的ETD\n")
+
+
+        # Client Order 
+        file_path = self.df1_path.get()
+        sheet_name = find_sheet_by_keyword(file_path)
+        df1 = read_from_client(file_path,sheet_name[0])
 
         # EU Open Order
         file_path = self.df2_path.get()
         sheet_name = "Marco & Mathias (Mandy)"
-        df2 = read_from_EU_OO(file_path,sheet_name,'FLEX NL')
+        df2 = read_from_EU_OO_v2(file_path,sheet_name,'FLEX NL')
 
-        self.msg.insert(tk.END, " Number of Rows = {} \n".format(len(df2)))
-        self.msg.insert(tk.END, df2['ETD'].to_string(index=False))
+
+        df_new = reorder_by_reference_multi(
+        df_main=df2,
+        keys_main=["Customer Reference", "Customer PO Item No"],
+        df_ref=df1,
+        keys_ref=["PO_NUMBER", "PO_LINE"],
+        drop_missing=True
+)
+
+        ret = check_columns_equal(df_new,df1,col1="Customer Reference",col2="PO_NUMBER")
+
+        if ret['result'] == False:
+            self.msg.insert(tk.END,str(ret))
+        else:
+            self.msg.insert(tk.END, " Number of Rows = {} \n".format(len(df_new)))
+            self.msg.insert(tk.END, df_new['ETD'].to_string(index=False))
+
+            df_new.to_csv("df_etd.csv", index=False, encoding="utf-8-sig")
 
 
 # -------------------------------
