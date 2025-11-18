@@ -251,12 +251,50 @@ class App:
                   command=self.additional_action)\
             .grid(row=3, column=0, columnspan=3, pady=10)
 
-        # ---- Right-side Message Area ----
-        tk.Label(self.root, text="訊息/結果：", font=self.font_large)\
-            .grid(row=0, column=3, sticky="nw", padx=5)
+        # ============================================================
+        # ⭐⭐⭐ 右側區塊：Message(left) + TreeView(right) ⭐⭐⭐
+        # ============================================================
+        right_frame = tk.Frame(self.root)
+        right_frame.grid(row=0, column=3, rowspan=50, sticky="nsew", padx=10)
 
-        self.msg = tk.Text(self.root, width=80, height=50, font=("Consolas", 10))
-        self.msg.grid(row=1, column=3, rowspan=20, padx=10)
+        # 右側區塊使用 2 欄：左 message / 右 table
+        right_frame.columnconfigure(0, weight=1)
+        right_frame.columnconfigure(1, weight=1)
+        right_frame.rowconfigure(1, weight=1)
+
+        # ---- 左側 Message Label ----
+        tk.Label(right_frame, text="訊息/結果：", font=self.font_large)\
+            .grid(row=0, column=0, sticky="nw")
+
+        # ---- 右側 Table Label ----
+        tk.Label(right_frame, text="原本的Client 表格：", font=self.font_large)\
+            .grid(row=0, column=1, sticky="nw")
+
+        # ---- 左側：Message 區 ----
+        self.msg = tk.Text(right_frame, width=60, height=45, font=("Consolas", 12))
+        self.msg.grid(row=1, column=0, sticky="nsew", padx=(0, 10))
+
+        # ---- 右側：TreeView 區 ----
+        table_frame = tk.Frame(right_frame)
+        table_frame.grid(row=1, column=1, sticky="nsew")
+
+        # Treeview 字型調小
+        style = ttk.Style()
+        self.tree_font = ("Consolas", 12)
+        style.configure("Treeview", font=self.tree_font, rowheight=18)
+
+        # 可顯示約 50 rows
+        self.table = ttk.Treeview(table_frame, show="headings", height=45)
+        self.table.pack(side="left", fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.table.yview)
+        scrollbar.pack(side="right", fill="y")
+
+        self.table.configure(yscrollcommand=scrollbar.set)
+
+        self.table.bind("<Control-c>", self.copy_treeview_selection)
+
+
 
     # -------------------------------
     # File Choosers
@@ -269,6 +307,12 @@ class App:
         if filename:
             self.df1_path.set(filename)
 
+            sheet_name = find_sheet_by_keyword(filename)
+            df = read_from_client(filename,sheet_name[0])
+            if len(df) > 0:
+                self.show_dataframe(df[['PO_NUMBER', "PO_LINE",'LAST_TUESDAY']])
+                self.auto_adjust_treeview_column_width(max_width_limit=150)
+
     def choose_df2(self):
         filename = filedialog.askopenfilename(
             title="選擇 EU OO檔案",
@@ -276,6 +320,81 @@ class App:
         )
         if filename:
             self.df2_path.set(filename)
+
+   # -------------------------------
+    # Show dataframe
+    # -------------------------------
+    def show_dataframe(self, df):
+        # 清空原表格欄位與資料
+        self.table.delete(*self.table.get_children())
+        self.table["columns"] = list(df.columns)
+
+        # 設定欄位
+        for col in df.columns:
+            self.table.heading(col, text=col)
+            self.table.column(col, width=120, anchor="center")
+
+        # 插入 DataFrame 每一列
+        for _, row in df.iterrows():
+            self.table.insert("", tk.END, values=list(row))
+
+
+    def auto_adjust_treeview_column_width(self, max_width_limit=180):
+        """
+        自動調整 TreeView 欄寬，但設定最大寬度，避免欄位太大。
+        max_width_limit：每欄最大寬度（像素）
+        """
+        for col in self.table["columns"]:
+            # 依 column title 設初始寬度
+            max_width = len(col) * 10
+
+            col_index = self.table["columns"].index(col)
+
+            # 檢查每筆資料，取最長字串
+            for item in self.table.get_children():
+                value = str(self.table.item(item, "values")[col_index])
+                width = len(value) * 7   # 字體小時 7px 比較準確
+                if width > max_width:
+                    max_width = width
+
+            # ⭐ 限制最大寬度（避免欄位太寬）
+            if max_width > max_width_limit:
+                max_width = max_width_limit
+
+            # ⭐ 也避免太窄（保留基本可視寬度）
+            if max_width < 60:
+                max_width = 60
+
+            self.table.column(col, width=max_width,stretch=False)
+
+    def copy_treeview_selection(self, event=None):
+        """
+        將 TreeView 選取行複製到剪貼簿（Tab 分隔，可貼 Excel）
+        """
+        selected = self.table.selection()
+        if not selected:
+            return
+
+        rows_text = []
+
+        # 取得欄位名稱
+        columns = self.table["columns"]
+
+        # 每行轉成 tab 分隔文字
+        for item in selected:
+            values = self.table.item(item, "values")
+            rows_text.append("\t".join(str(v) for v in values))
+
+        # 最後組成多行
+        final_text = "\n".join(rows_text)
+
+        # 加入剪貼簿
+        self.root.clipboard_clear()
+        self.root.clipboard_append(final_text)
+        self.root.update()
+
+        return "break"
+
 
     # -------------------------------
     # Main Processing
