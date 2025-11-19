@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 import pandas as pd
-
+import os
 
 def find_sheet_by_keyword(file_path, keyword="Purchase Order Data"):
     """
@@ -205,6 +205,7 @@ class App:
 
         # 字型設定
         self.font_large = ("Arial", 14)
+        self.font_mid = ("Arial", 10)
         self.font_button = ("Arial", 14, "bold")
 
         self.build_ui()
@@ -214,12 +215,16 @@ class App:
     # -------------------------------
     def build_ui(self):
 
+
+        self.df1_only_path = tk.StringVar()
+        self.df2_only_path = tk.StringVar()
+
         # ---- df1 ----
         tk.Label(self.root, text="Client給的檔案：", font=self.font_large)\
             .grid(row=0, column=0, padx=10, pady=10, sticky="w")
 
         self.df1_path = tk.StringVar()
-        tk.Entry(self.root, textvariable=self.df1_path, width=50, font=self.font_large)\
+        tk.Entry(self.root, textvariable=self.df1_only_path, width=40, font=self.font_mid)\
             .grid(row=0, column=1, padx=10)
 
         tk.Button(self.root, text="檔案", font=self.font_button, width=4,
@@ -231,7 +236,7 @@ class App:
             .grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
         self.df2_path = tk.StringVar()
-        tk.Entry(self.root, textvariable=self.df2_path, width=50, font=self.font_large)\
+        tk.Entry(self.root, textvariable=self.df2_only_path, width=40, font=self.font_mid)\
             .grid(row=1, column=1, padx=10)
 
         tk.Button(self.root, text="檔案", font=self.font_button, width=4,
@@ -305,6 +310,7 @@ class App:
         )
         if filename:
             self.df1_path.set(filename)
+            self.df1_only_path.set(os.path.basename(filename))
 
             sheet_name = find_sheet_by_keyword(filename)
             df = read_from_client(filename,sheet_name[0])
@@ -319,6 +325,7 @@ class App:
         )
         if filename:
             self.df2_path.set(filename)
+            self.df2_only_path.set(os.path.basename(filename))
 
    # -------------------------------
     # Show dataframe
