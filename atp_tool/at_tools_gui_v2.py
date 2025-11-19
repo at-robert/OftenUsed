@@ -7,18 +7,17 @@ def find_sheet_by_keyword(file_path, keyword="Purchase Order Data"):
     """
     在 Excel 每個 sheet 中搜尋是否存在指定字串，並回傳所有符合的 sheet 名稱。
     """
-    xl = pd.ExcelFile(file_path)  # 先讀取 workbook
+    xl = pd.ExcelFile(file_path)
     matched_sheets = []
 
     for sheet in xl.sheet_names:
         df = pd.read_excel(file_path, sheet_name=sheet, header=None, dtype=str)
 
-        # 檢查整個 sheet 是否有 keyword
-        if df.applymap(lambda x: keyword in x if isinstance(x, str) else False).any().any():
+        # 將所有 cell 壓成一維並檢查是否包含 keyword
+        if df.stack().str.contains(keyword, na=False).any():
             matched_sheets.append(sheet)
 
     return matched_sheets
-
 
 def read_from_client(file_, sheet_):
     # 先讀整個 sheet（不含 header）
@@ -202,7 +201,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("ATP EU OO Tools")
-        self.root.geometry("1750x880")     # 稍微加高以容納新按鍵
+        self.root.geometry("1850x880")     # 稍微加高以容納新按鍵
 
         # 字型設定
         self.font_large = ("Arial", 14)
@@ -223,7 +222,7 @@ class App:
         tk.Entry(self.root, textvariable=self.df1_path, width=50, font=self.font_large)\
             .grid(row=0, column=1, padx=10)
 
-        tk.Button(self.root, text="選擇檔案", font=self.font_button, width=12,
+        tk.Button(self.root, text="檔案", font=self.font_button, width=4,
                   command=self.choose_df1)\
             .grid(row=0, column=2, padx=10)
 
@@ -235,7 +234,7 @@ class App:
         tk.Entry(self.root, textvariable=self.df2_path, width=50, font=self.font_large)\
             .grid(row=1, column=1, padx=10)
 
-        tk.Button(self.root, text="選擇檔案", font=self.font_button, width=12,
+        tk.Button(self.root, text="檔案", font=self.font_button, width=4,
                   command=self.choose_df2)\
             .grid(row=1, column=2, padx=10)
 
@@ -339,6 +338,9 @@ class App:
             self.table.insert("", tk.END, values=list(row))
 
 
+    # -------------------------------
+    # Tree View Auto adjustment
+    # -------------------------------
     def auto_adjust_treeview_column_width(self, max_width_limit=180):
         """
         自動調整 TreeView 欄寬，但設定最大寬度，避免欄位太大。
@@ -367,6 +369,9 @@ class App:
 
             self.table.column(col, width=max_width,stretch=False)
 
+    # -------------------------------
+    # Tree View Copy to clipboard
+    # -------------------------------
     def copy_treeview_selection(self, event=None):
         """
         將 TreeView 選取行複製到剪貼簿（Tab 分隔，可貼 Excel）
