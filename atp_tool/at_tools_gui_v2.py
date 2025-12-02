@@ -31,7 +31,7 @@ def read_from_client(file_, sheet_):
     df.columns = new_header
     
     # Step 4: 只留下三個欄位
-    wanted_cols = ["PO_NUMBER","PO_LINE","NEW_REQUEST_DATE", "SUPPLIER_CONFIRM_DATE"]
+    wanted_cols = ["PO_NUMBER","PO_LINE","NEW_REQUEST_DATE"]
     
     # 若欄名有前後空白或大小寫不同，可用這種方式比對
     df.columns = df.columns.str.strip()
@@ -45,18 +45,22 @@ def read_from_client(file_, sheet_):
     # 先把字串轉成 datetime
     df["NEW_REQUEST_DATE"] = pd.to_datetime(df["NEW_REQUEST_DATE"], format="%m/%d/%Y")
     
-    # 計算上一個星期二 (weekday: Tuesday = 1)
-    # dt.weekday：Monday=0, Tuesday=1, ... Sunday=6
-    df["LAST_TUESDAY"] = df["NEW_REQUEST_DATE"] - pd.to_timedelta(
-        (df["NEW_REQUEST_DATE"].dt.weekday - 1) % 7,
-        unit="D"
-    )
+    # 第一步：先減去 7 天（回到上一週）
+    df["PREV_WEEK_DATE"] = df["NEW_REQUEST_DATE"] - pd.Timedelta(days=7)
+
+    # 找到 PREV_WEEK_DATE 當週的週一，然後加 1 天就是當週的星期二
+    # 注意：dt.weekday() 回傳 Monday=0, Tuesday=1...
+    df["WEEK_MONDAY"] = df["PREV_WEEK_DATE"] - pd.to_timedelta(df["PREV_WEEK_DATE"].dt.weekday, unit="D")
+    df["LAST_TUESDAY"] = df["WEEK_MONDAY"] + pd.Timedelta(days=1)
     
     # 格式化成 yyyy-mm-dd
     df["LAST_TUESDAY"] = df["LAST_TUESDAY"].dt.strftime("%Y/%m/%d")
 
     df["PO_LINE"] = pd.to_numeric(df["PO_LINE"], errors="coerce")
     df["PO_LINE"] = df["PO_LINE"].fillna(0)
+
+
+    df = df.drop(columns=["PREV_WEEK_DATE", "WEEK_MONDAY"])
     
     return df
 
@@ -315,7 +319,7 @@ class App:
             sheet_name = find_sheet_by_keyword(filename)
             df = read_from_client(filename,sheet_name[0])
             if len(df) > 0:
-                self.show_dataframe(df[['PO_NUMBER', "PO_LINE",'LAST_TUESDAY']])
+                self.show_dataframe(df[['PO_NUMBER', "PO_LINE",'NEW_REQUEST_DATE','LAST_TUESDAY']])
                 self.auto_adjust_treeview_column_width(max_width_limit=150)
 
     def choose_df2(self):
