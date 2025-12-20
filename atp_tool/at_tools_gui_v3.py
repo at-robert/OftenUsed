@@ -548,7 +548,7 @@ class App:
         df_new = align_df2_by_df1_order(df1,df2)
 
         df_new["CRD"] = pd.to_datetime(df_new["CRD"], errors="coerce")
-        df_new["CRD"] = df_new["CRD"].dt.strftime("%Y-%m-%d")
+        df_new["CRD"] = df_new["CRD"].dt.strftime("%Y/%m/%d")
 
 
         if(len(df1) == len(df_new)):
