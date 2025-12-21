@@ -84,6 +84,7 @@ def align_df2_by_df1_order(
     若 df2 缺少 df1 中任一 key，直接丟出 ValueError。
     """
 
+    error_str = ""
     key_cols = list(key_cols)  # ⭐ 關鍵修正：tuple → list
 
     # ---- 欄位檢查 ----
@@ -104,12 +105,17 @@ def align_df2_by_df1_order(
         how="left"
     )
 
-    # ---- 檢查 df2 是否缺資料 ----
+    # ---- 找出 df2 缺少的資料 ----
     missing = merged[merged["CRD"].isna()]
     if not missing.empty:
-        missing_keys = missing[key_cols].drop_duplicates()
-        raise ValueError(
-            "df2 找不到以下資料：\n"
+        missing_keys = (
+            missing[key_cols]
+            .drop_duplicates()
+            .reset_index(drop=True)
+        )
+
+        error_str = (
+            "df2 找不到以下 Sales Document / Item：\n\n"
             + missing_keys.to_string(index=False)
         )
 
@@ -121,7 +127,7 @@ def align_df2_by_df1_order(
         .reset_index(drop=True)
     )
 
-    return df_new
+    return df_new , error_str
 
 
 
@@ -545,18 +551,21 @@ class App:
         sheet_name = "Marco & Mathias (Mandy)"
         df2 = read_eu_oo_xlsx(file_path,sheet_name)
 
-        df_new = align_df2_by_df1_order(df1,df2)
+        error_str = ''
+        df_new, error_str  = align_df2_by_df1_order(df1,df2)
 
         df_new["CRD"] = pd.to_datetime(df_new["CRD"], errors="coerce")
         df_new["CRD"] = df_new["CRD"].dt.strftime("%Y/%m/%d")
 
 
-        if(len(df1) == len(df_new)):
+        # if(len(df1) == len(df_new)):
+        if(error_str == ''):
             self.msg.insert(tk.END, " Number of Rows = {} \n".format(len(df_new)))
             self.msg.insert(tk.END, df_new.to_string(index=False))
             df_new.to_csv("df_sap_crd.csv", index=False, encoding="utf-8-sig")
         else:
              self.msg.insert(tk.END, "Number doesn't match")
+             self.msg.insert(tk.END,error_str)
 
 #         df2 = read_from_EU_OO(file_path,sheet_name,'FLEX NL')
 
