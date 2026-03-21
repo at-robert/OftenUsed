@@ -15,7 +15,7 @@ class ExcelProcessorApp:
         self.file_path = ""
         self.all_sheets = []
         self.sheet_checkboxes = {} 
-        self.final_mandy_df = pd.DataFrame() # 儲存最後生成的完整資料
+        self.final_mandy_df = pd.DataFrame() 
         
         self.column_names_list = [
             'Order Date', 'Sold-to Party', 'Ship-to Party', 'SAP SO#', 'SO Item',
@@ -30,7 +30,7 @@ class ExcelProcessorApp:
             'Sales Document Item', 'Sold-to Abbreviation', 'Ship-to Abbreviation', 'Customer Reference Date',
             'Sold-to Party', 'Ship-to Party', 'Customer Reference', 'Customer PO Item No', 'Material',
             'Module Material', 'Customer Material', 'Order Quantity', 'Unit Price', 'CRD', 'ETD', 'ETA',
-            'Is Sample (Y)', 'Remark', 'Amount', 'Purchase Order Type', 'Sample/Loan SFID', 'Is Gift Item (ZFTO)',
+            'Is Sample (Y)', 'Remark', 'Price Check', 'Purchase Order Type', 'Sample/Loan SFID', 'Is Gift Item (ZFTO)',
             'FOC Invoice Price', 'Masking Price', 'Masking Price Currency', 'End Customer PO#', 'End Customer PN',
             'Incoterm (Header)', 'Inco.Location (Header)', 'Incoterm (Item)', 'Inco.Location (Item)',
             'Special Procurement Application No', 'Titop DN', 'Tiptop DN Item', 'Unit Price Currency',
@@ -41,7 +41,7 @@ class ExcelProcessorApp:
         self.tree_view_cols = [
             'Customer Reference Date', 'Sold-to Party', 'Ship-to Party', 'Sales Document',
             'Sales Document Item', 'Customer Reference', 'Customer PO Item No', 'Material',
-            'Customer Material', 'Order Quantity', 'Unit Price', 'CRD', 'ETD', 'Remark',
+            'Customer Material', 'Order Quantity', 'Unit Price', 'CRD', 'ETD', 'Remark','Price Check',
             'BU', 'Interface', 'Flash / DRAM', 'ETD Reason', 'ETD History'
         ]
 
@@ -85,6 +85,12 @@ class ExcelProcessorApp:
         self.scroll_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.create_window((0, 0), window=self.scroll_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        
+        # 偵測滑鼠滾輪
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel) # Linux scroll up
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel) # Linux scroll down
+
         self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
@@ -97,21 +103,17 @@ class ExcelProcessorApp:
         self.info_label = ttk.Label(right_frame, text="Rows: 0 | Displaying 19 Core Columns", font=('Arial', 11, 'bold'), foreground="#2c3e50")
         self.info_label.pack(anchor=tk.W, pady=(0, 10))
 
-        # Treeview 與 滾動條佈局
         self.tree_container = ttk.Frame(right_frame)
         self.tree_container.pack(fill=tk.BOTH, expand=True)
 
         self.tree = ttk.Treeview(self.tree_container, show="headings", selectmode="extended")
         
-        # 垂直滾動條
         self.tree_scroll_y = ttk.Scrollbar(self.tree_container, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=self.tree_scroll_y.set)
         
-        # 水平滾動條
         self.tree_scroll_x = ttk.Scrollbar(self.tree_container, orient="horizontal", command=self.tree.xview)
         self.tree.configure(xscrollcommand=self.tree_scroll_x.set)
 
-        # 佈局配置
         self.tree.grid(row=0, column=0, sticky='nsew')
         self.tree_scroll_y.grid(row=0, column=1, sticky='ns')
         self.tree_scroll_x.grid(row=1, column=0, sticky='ew')
@@ -119,12 +121,21 @@ class ExcelProcessorApp:
         self.tree_container.grid_rowconfigure(0, weight=1)
         self.tree_container.grid_columnconfigure(0, weight=1)
 
-        # --- 綁定右鍵選單 (複製功能) ---
         self.context_menu = tk.Menu(self.root, tearoff=0)
         self.context_menu.add_command(label="Copy Cell Value", command=self.copy_cell)
         self.context_menu.add_command(label="Copy Entire Row", command=self.copy_row)
-        self.tree.bind("<Button-3>", self.show_context_menu) # Windows/Linux 右鍵
-        self.tree.bind("<Button-2>", self.show_context_menu) # macOS 右鍵
+        self.tree.bind("<Button-3>", self.show_context_menu)
+        self.tree.bind("<Button-2>", self.show_context_menu)
+
+    # --- 輔助功能：滑鼠滾輪 ---
+    def _on_mousewheel(self, event):
+        # 判斷系統，Windows/macOS 使用 event.delta，Linux 使用 event.num
+        if event.num == 4:
+            self.canvas.yview_scroll(-1, "units")
+        elif event.num == 5:
+            self.canvas.yview_scroll(1, "units")
+        else:
+            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
     # --- 功能邏輯 ---
     def open_file(self):
@@ -242,7 +253,7 @@ class ExcelProcessorApp:
                 'line no.': 'Customer PO Item No', 'Part Number': 'Material',
                 'Customer Part Number': 'Customer Material', 'Qty Ordered': 'Order Quantity',
                 'Unit Price': 'Unit Price', 'Required. Date': 'CRD',
-                'shipping schedule': 'ETD', 'Remark': 'Remark', 'BU': 'BU',
+                'shipping schedule': 'ETD', 'Remark': 'Remark', 'Tracking no.':'Price Check','BU': 'BU',
                 'Interface': 'Interface', 'Flash / DRAM': 'Flash / DRAM',
                 'ETD reason': 'ETD Reason', 'ETD History': 'ETD History'
             }
@@ -257,7 +268,7 @@ class ExcelProcessorApp:
                     self.final_mandy_df[col] = self.final_mandy_df[col].apply(self.smart_date_format)
 
             other_cols = [c for c in self.final_mandy_df.columns if c not in date_cols]
-            self.final_mandy_df[other_cols] = self.final_mandy_df[other_cols].astype(str).replace(['nan', 'None'], '')
+            self.final_mandy_df[other_cols] = self.final_mandy_df[other_cols].astype(str).replace(['nan', 'None', 'nan\n'], '')
 
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             output_name = f"mandy_output_{timestamp}.xlsx"
@@ -274,13 +285,14 @@ class ExcelProcessorApp:
         self.tree["columns"] = list(display_df.columns)
         for col in display_df.columns:
             self.tree.heading(col, text=col)
-            self.tree.column(col, width=150, minwidth=100, anchor=tk.W) # 設定欄位寬度以啟動水平滾動
+            # 移除固定 width=150，改用 stretch=True 以便手動調整
+            self.tree.column(col, width=150, minwidth=50, stretch=True, anchor=tk.W) 
         
         for item in self.tree.get_children():
             self.tree.delete(item)
         
         data_rows = display_df.values.tolist()
-        for row in data_rows: # 載入所有資料以便滾動觀看
+        for row in data_rows:
             self.tree.insert("", tk.END, values=row)
 
         self.info_label.config(text=f"Previewing 19 Core Columns | Total Rows: {len(full_df)}")
